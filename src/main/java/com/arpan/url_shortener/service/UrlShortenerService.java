@@ -1,5 +1,6 @@
 package com.arpan.url_shortener.service;
 
+import com.arpan.url_shortener.dto.AnalyticsResponse;
 import com.arpan.url_shortener.entity.UrlMapping;
 import com.arpan.url_shortener.repo.UrlMappingRepository;
 import com.arpan.url_shortener.util.Base62Encoder;
@@ -25,6 +26,7 @@ public class UrlShortenerService {
 
         UrlMapping mapping = UrlMapping.builder()
                 .longUrl(longUrl)
+                .clickCount(0L)
                 .build();
 
         mapping = repository.save(mapping);
@@ -41,9 +43,30 @@ public class UrlShortenerService {
 
     public String getOriginalUrl(String shortCode) {
 
-        return repository.findByShortCode(shortCode)
-                .map(UrlMapping::getLongUrl)
+        UrlMapping mapping = repository.findByShortCode(shortCode)
                 .orElseThrow(() ->
                         new RuntimeException("Short URL not found"));
+        mapping.setClickCount(
+                mapping.getClickCount() + 1
+        );
+
+        System.out.println("Click Count = " + mapping.getClickCount());
+
+        repository.save(mapping);
+
+        return mapping.getLongUrl();
+    }
+
+    public AnalyticsResponse getAnalytics(String shortCode) {
+
+        UrlMapping mapping = repository.findByShortCode(shortCode)
+                .orElseThrow(() ->
+                        new RuntimeException("Short URL not found"));
+
+        return new AnalyticsResponse(
+                mapping.getShortCode(),
+                mapping.getLongUrl(),
+                mapping.getClickCount()
+        );
     }
 }

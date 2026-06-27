@@ -1,5 +1,6 @@
 package com.arpan.url_shortener.controller;
 
+import com.arpan.url_shortener.dto.AnalyticsResponse;
 import com.arpan.url_shortener.dto.ShortenUrlRequest;
 import com.arpan.url_shortener.dto.ShortenUrlResponse;
 import com.arpan.url_shortener.service.UrlShortenerService;
@@ -15,6 +16,7 @@ import java.net.URI;
 public class UrlShortenerController {
     @Autowired
     private UrlShortenerService service;
+
 
     @PostMapping("/shorten")
     public ShortenUrlResponse shorten(
@@ -39,5 +41,12 @@ public class UrlShortenerController {
                 .status(HttpStatus.FOUND)
                 .location(URI.create(originalUrl))
                 .build();
+    }
+
+    @GetMapping("/analytics/{shortCode}")
+    public AnalyticsResponse getAnalytics(
+            @PathVariable String shortCode) {
+
+        return service.getAnalytics(shortCode);
     }
 }

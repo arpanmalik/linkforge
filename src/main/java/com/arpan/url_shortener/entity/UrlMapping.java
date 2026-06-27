@@ -24,4 +24,6 @@ public class UrlMapping {
     private String longUrl;
 
     private LocalDateTime createdAt;
+
+    private Long clickCount;
 }

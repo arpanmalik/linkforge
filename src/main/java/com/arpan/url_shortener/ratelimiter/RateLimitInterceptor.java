@@ -1,9 +1,11 @@
 package com.arpan.url_shortener.ratelimiter;
 
+import com.arpan.url_shortener.service.RedisRateLimiterService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -12,21 +14,24 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class RateLimitInterceptor implements HandlerInterceptor {
 
     @Autowired
-    private RateLimiterService rateLimiterService;
+    private RedisRateLimiterService redisRateLimiterService;
     @Override
     public boolean preHandle(
             HttpServletRequest request,
             HttpServletResponse response,
             Object handler) throws Exception {
 
-        String ipAddress = request.getRemoteAddr();
+        String ip = request.getRemoteAddr();
 
-        if (!rateLimiterService.isAllowed(ipAddress)) {
+        if ("0:0:0:0:0:0:0:1".equals(ip) || "::1".equals(ip)) {
+            ip = "127.0.0.1";
+        }
 
-            response.setStatus(429);
-            response.getWriter()
-                    .write("Rate limit exceeded. Try again later.");
-
+        if (!redisRateLimiterService.allowRequest(ip)) {
+            response.sendError(
+                    HttpStatus.TOO_MANY_REQUESTS.value(),
+                    "Rate limit exceeded"
+            );
             return false;
         }
 
